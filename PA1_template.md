@@ -1,7 +1,7 @@
 ---
 output:
-  html_document: default
   pdf_document: default
+  html_document: default
 ---
 # Daily footsteps activity analysis
 
@@ -18,11 +18,13 @@ The variables included in this dataset are:
 * **date**: The date on which the measurement was taken in YYYY-MM-DD format
 * **interval**: Identifier for the 5-minute interval in which measurement was taken
 
-```{r, message=FALSE, warning=FALSE}
+
+``` r
 library(dplyr)
 ```
 
-```{r}
+
+``` r
 activity<-read.csv("activity.csv")
 ```
 
@@ -30,8 +32,8 @@ activity<-read.csv("activity.csv")
 
 I calculate the total daily steps by summing the data by date and visualize their distribution with a histogram to show daily activity patterns.
 
-```{r}
 
+``` r
 total_per_day<- activity %>%
     group_by(date) %>%
 summarise(total_steps=sum(steps,na.rm = TRUE))
@@ -41,11 +43,16 @@ hist(total_per_day$total_steps,
      ylab = "Number of Days",
      col = "blue",
      breaks = 20)
+```
+
+![plot of chunk unnamed-chunk-3](figure/unnamed-chunk-3-1.png)
+
+``` r
 med<-median(total_per_day$total_steps)
 m<-trunc(mean(total_per_day$total_steps))
 ```
 
-The mean of the total number of steps taken per day is `r m` and median is `r med` 
+The mean of the total number of steps taken per day is 9354 and median is 10395 
 
 
 ---
@@ -55,7 +62,8 @@ The mean of the total number of steps taken per day is `r m` and median is `r me
 
 I calculate the average number of steps for each 5-minute interval across all days to explore daily activity patterns, highlighting the times of day when activity peaks.
 
-```{r}
+
+``` r
 avg_steps_interval <- activity %>%
         group_by(interval) %>%
         summarise(mean_steps= trunc(mean(steps,na.rm=TRUE)))
@@ -65,10 +73,15 @@ plot(avg_steps_interval$interval,avg_steps_interval$mean_steps,
      xlab = "5-minute Interval",
      ylab = "Average Number of Steps",
      main = "Average Daily Activity Pattern")
+```
+
+![plot of chunk unnamed-chunk-4](figure/unnamed-chunk-4-1.png)
+
+``` r
 max_interval<-avg_steps_interval$interval[which.max(avg_steps_interval$mean_steps)]
 ```
 
- The 5-minute interval, which on average across all the days in the data set contains the maximum number of steps is `r max_interval`
+ The 5-minute interval, which on average across all the days in the data set contains the maximum number of steps is 835
 
 
 ---
@@ -76,13 +89,15 @@ max_interval<-avg_steps_interval$interval[which.max(avg_steps_interval$mean_step
 
 ## Imputing missing values
 
-```{r}
+
+``` r
 sum_NA<-sum(is.na(activity$steps))
 ```
 
-Since the total number of missing values in the dataset is `r sum_NA`, I address them by filling each missing step entry with the average count for the corresponding 5-minute interval before proceeding with further analysis.
+Since the total number of missing values in the dataset is 2304, I address them by filling each missing step entry with the average count for the corresponding 5-minute interval before proceeding with further analysis.
 
-```{r}
+
+``` r
 activity_filled<-activity %>%
     left_join(avg_steps_interval, by = "interval") %>%
     mutate(steps=ifelse(is.na(steps), mean_steps,steps)) %>%
@@ -96,13 +111,18 @@ hist(total_per_day_filled$total_steps,
      ylab = "Number of Days",
      col = "blue",
      breaks = 20)
+```
+
+![plot of chunk unnamed-chunk-6](figure/unnamed-chunk-6-1.png)
+
+``` r
 med_filled<-median(total_per_day_filled$total_steps)
 m_filled<-trunc(mean(total_per_day_filled$total_steps))
 ```
 
 After imputing missing values,
-the new mean of the total number of steps per day is `r m_filled` (previously `r m`),
-and the new median is `r med_filled` (previously `r med`).
+the new mean of the total number of steps per day is 1.0749 &times; 10<sup>4</sup> (previously 9354),
+and the new median is 1.0641 &times; 10<sup>4</sup> (previously 10395).
 **Filling NAs with interval averages isn’t fully rigorous, but it’s sufficient for the purpose of this simple analysis.**
 
 
@@ -113,7 +133,8 @@ and the new median is `r med_filled` (previously `r med`).
 
 Finally, I examine whether activity patterns differ between weekdays and weekends by categorizing each day accordingly and calculating the average steps for each 5-minute interval in both groups.
 
-```{r panel-plot, fig.height=8, fig.width=10}
+
+``` r
 activity_filled$date<-as.Date(activity_filled$date)
 activity_filled$week<- ifelse(weekdays(activity_filled$date) %in% c("Monday","Tuesday","Wednesday","Thursday","Friday"),"weekday","weekend")
 avg_week<- activity_filled %>%
@@ -137,6 +158,8 @@ plot(avg_weekend$interval,avg_weekend$mean_steps,
 mtext("Average Steps per 5-Minute Interval: Weekdays vs Weekends",
       side = 3, outer = TRUE, line =1, cex = 1.5)
 ```
+
+![plot of chunk panel-plot](figure/panel-plot-1.png)
 
 ---
 
